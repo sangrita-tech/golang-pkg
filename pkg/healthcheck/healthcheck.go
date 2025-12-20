@@ -10,7 +10,7 @@ import (
 )
 
 type HealthCheck struct {
-	cfg Configs
+	cfg Config
 
 	mux *http.ServeMux
 	srv *http.Server
@@ -20,7 +20,7 @@ type HealthCheck struct {
 	handlers map[string]http.Handler
 }
 
-func New(cfg Configs) (*HealthCheck, error) {
+func New(cfg Config) (*HealthCheck, error) {
 	if cfg.Addr == "" {
 		return nil, errors.New("healthcheck: addr is empty")
 	}

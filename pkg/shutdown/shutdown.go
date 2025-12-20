@@ -7,8 +7,8 @@ import (
 	"syscall"
 )
 
-func Wait(parent context.Context, cfg Configs, stopFunc func(ctx context.Context)) {
-	notifyCtx, notifyCancel := signal.NotifyContext(parent, os.Interrupt, syscall.SIGTERM)
+func Wait(parentCtx context.Context, cfg Config, stopFunc func(ctx context.Context)) {
+	notifyCtx, notifyCancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM)
 	defer notifyCancel()
 
 	<-notifyCtx.Done()

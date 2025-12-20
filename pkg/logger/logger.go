@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func New(cfg Configs, buildInfo version.BuildInfo) (*zap.Logger, error) {
+func New(cfg Config, buildInfo version.BuildInfo) (*zap.Logger, error) {
 	level, err := parseLevel(cfg.Level)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func New(cfg Configs, buildInfo version.BuildInfo) (*zap.Logger, error) {
 	return l, nil
 }
 
-func NewInMemory(cfg Configs, buildInfo version.BuildInfo) (*zap.Logger, *Capture, error) {
+func NewInMemory(cfg Config, buildInfo version.BuildInfo) (*zap.Logger, *Capture, error) {
 	level, err := parseLevel(cfg.Level)
 	if err != nil {
 		return nil, nil, err
@@ -68,7 +68,7 @@ func encoderConfigUTC() zapcore.EncoderConfig {
 	}
 }
 
-func buildFields(cfg Configs, bi version.BuildInfo) []zap.Field {
+func buildFields(cfg Config, bi version.BuildInfo) []zap.Field {
 	fields := []zap.Field{
 		zap.String("app_version", bi.Version),
 	}

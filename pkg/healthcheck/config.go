@@ -1,5 +1,5 @@
 package healthcheck
 
-type Configs struct {
+type Config struct {
 	Addr string `yaml:"addr" env:"ADDR" env-default:":8080"`
 }
