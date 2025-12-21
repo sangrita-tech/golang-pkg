@@ -8,13 +8,17 @@ import (
 )
 
 func Wait(parentCtx context.Context, cfg Config, stopFunc func(ctx context.Context)) {
-	notifyCtx, notifyCancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM)
-	defer notifyCancel()
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(sigCh)
 
-	<-notifyCtx.Done()
+	select {
+	case <-parentCtx.Done():
+		return
+	case <-sigCh:
+	}
 
 	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), cfg.Timeout)
 	defer timeoutCancel()
-
 	stopFunc(timeoutCtx)
 }
