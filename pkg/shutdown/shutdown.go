@@ -5,20 +5,24 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
-func Wait(parentCtx context.Context, cfg Config, stopFunc func(ctx context.Context)) {
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-	defer signal.Stop(sigCh)
+func Wait(parentCtx context.Context, delay time.Duration, stopFunc func(shutdownCtx context.Context)) {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 
-	select {
-	case <-parentCtx.Done():
-		return
-	case <-sigCh:
-	}
+	go func() {
+		defer signal.Stop(ch)
 
-	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), cfg.Timeout)
-	defer timeoutCancel()
-	stopFunc(timeoutCtx)
+		select {
+		case <-ch:
+		case <-parentCtx.Done():
+		}
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), delay)
+		defer shutdownCancel()
+
+		stopFunc(shutdownCtx)
+	}()
 }
