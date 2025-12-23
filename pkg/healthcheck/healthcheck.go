@@ -83,14 +83,28 @@ func (h *Healthcheck) Register(p *Probe) error {
 	return nil
 }
 
-func (h *Healthcheck) Run() error {
-	err := h.srv.ListenAndServe()
-	if err == http.ErrServerClosed {
-		return nil
-	}
-	return err
-}
+func (h *Healthcheck) Run(ctx context.Context) error {
+	errCh := make(chan error, 1)
 
-func (h *Healthcheck) Shutdown(ctx context.Context) error {
-	return h.srv.Shutdown(ctx)
+	go func() {
+		err := h.srv.ListenAndServe()
+		if errors.Is(err, http.ErrServerClosed) {
+			errCh <- nil
+			return
+		}
+		errCh <- err
+	}()
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), h.cfg.ShutdownTimeout)
+		defer cancel()
+
+		err := h.srv.Shutdown(shutdownCtx)
+		_ = <-errCh
+
+		return err
+	}
 }
