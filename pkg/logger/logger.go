@@ -5,14 +5,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	klog "k8s.io/klog/v2"
 )
 
-func New(cfg Config) (*zap.Logger, error) {
+func New(cfg Config) (*zap.Logger, func(), error) {
 	level, err := parseLevel(cfg.Level)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	encCfg := encoderConfigUTC()
@@ -20,7 +22,7 @@ func New(cfg Config) (*zap.Logger, error) {
 	zcfg := zap.Config{
 		Level:            zap.NewAtomicLevelAt(level),
 		Development:      cfg.DevMode,
-		Encoding:         "json",
+		Encoding:         cfg.Format,
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
 		EncoderConfig:    encCfg,
@@ -28,11 +30,22 @@ func New(cfg Config) (*zap.Logger, error) {
 
 	l, err := zcfg.Build()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	l = l.WithOptions(zap.AddCaller()).With(buildFields(cfg)...)
-	return l, nil
+
+	restoreStdLog := zap.RedirectStdLog(l)
+
+	klog.SetLogger(zapr.NewLogger(l))
+	klog.EnableContextualLogging(true)
+
+	cleanup := func() {
+		restoreStdLog()
+		_ = l.Sync()
+	}
+
+	return l, cleanup, nil
 }
 
 func NewInMemory(cfg Config) (*zap.Logger, *Capture, error) {
@@ -55,9 +68,9 @@ func encoderConfigUTC() zapcore.EncoderConfig {
 	return zapcore.EncoderConfig{
 		TimeKey:       "time",
 		LevelKey:      "level",
+		MessageKey:    "msg",
 		NameKey:       "logger",
 		CallerKey:     "caller",
-		MessageKey:    "msg",
 		StacktraceKey: "stack",
 		EncodeLevel:   zapcore.CapitalLevelEncoder,
 		EncodeCaller:  zapcore.ShortCallerEncoder,
