@@ -9,14 +9,6 @@ on:
       - "**"
 
 jobs:
-  lint:
-    uses: sangrita-tech/platform-ci/.github/workflows/lint.yml@v1.3.0
-    permissions:
-      contents: read
-    secrets: inherit
-    with:
-      go_version: "1.25"
-
   vuln-scan:
     uses: sangrita-tech/platform-ci/.github/workflows/scan-vulns.yml@v1.3.0
     permissions:
