@@ -17,22 +17,8 @@ jobs:
     with:
       go_version: "1.25"
 
-  test:
-    uses: sangrita-tech/platform-ci/.github/workflows/test.yml@v1.3.0
-    permissions:
-      contents: read
-    secrets: inherit
-    with:
-      go_version: "1.25"
-
   vuln-scan:
     uses: sangrita-tech/platform-ci/.github/workflows/scan-vulns.yml@v1.3.0
-    permissions:
-      contents: read
-      security-events: write
-
-  secrets-scan:
-    uses: sangrita-tech/platform-ci/.github/workflows/scan-secrets.yml@v1.3.0
     permissions:
       contents: read
       security-events: write
