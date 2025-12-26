@@ -1,4 +1,4 @@
-module github.com/sangrita-tech/golang-pkg
+module github.com/sangrita-tech/platform-go-pkg
 
 go 1.25.0
 

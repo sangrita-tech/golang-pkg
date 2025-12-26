@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sangrita-tech/golang-pkg/pkg/config"
+	"github.com/sangrita-tech/platform-go-pkg/pkg/config"
 	"github.com/stretchr/testify/require"
 )
 

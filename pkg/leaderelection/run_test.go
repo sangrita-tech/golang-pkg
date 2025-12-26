@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sangrita-tech/golang-pkg/pkg/leaderelection"
+	"github.com/sangrita-tech/platform-go-pkg/pkg/leaderelection"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
