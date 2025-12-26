@@ -1,9 +1,5 @@
 name: Release
 
-env:
-  GO_VERSION: "1.25"
-  PLATFORM_CI_REF: "v1.3.0"
-
 on:
   push:
     tags:
@@ -11,10 +7,7 @@ on:
 
 jobs:
   release:
-    uses: sangrita-tech/platform-ci/.github/workflows/release.yml@${{ env.PLATFORM_CI_REF }}
+    uses: sangrita-tech/platform-ci/.github/workflows/release.yml@v1.3.0
     permissions:
       contents: write
       packages: write
-    secrets: inherit
-    with:
-      go_version: ${{ env.GO_VERSION }}
