@@ -3,6 +3,7 @@ package healthcheck
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type Healthcheck struct {
-	cfg Config
+	cfg *Config
 
 	mux *http.ServeMux
 	srv *http.Server
@@ -20,9 +21,13 @@ type Healthcheck struct {
 	handlers map[string]http.Handler
 }
 
-func New(cfg Config) (*Healthcheck, error) {
-	if cfg.Addr == "" {
-		return nil, errors.New("healthcheck: addr is empty")
+func New(cfg *Config) (*Healthcheck, error) {
+	if cfg == nil {
+		return nil, errors.New("healthcheck -> config is nil")
+	}
+
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("healthcheck -> failed to validate config -> %w", err)
 	}
 
 	h := &Healthcheck{
@@ -42,26 +47,26 @@ func New(cfg Config) (*Healthcheck, error) {
 
 func (h *Healthcheck) Register(p *Probe) error {
 	if p == nil {
-		return errors.New("healthcheck: probe is nil")
+		return errors.New("healthcheck -> probe is nil")
 	}
 	if p.Name() == "" {
-		return errors.New("healthcheck: probe name is empty")
+		return errors.New("healthcheck -> probe name is empty")
 	}
 	route := p.Route()
 	if route == "" || route[0] != '/' {
-		return errors.New("healthcheck: probe route must start with '/'")
+		return fmt.Errorf("healthcheck -> probe route %q must start with '/'", route)
 	}
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	if _, exists := h.probes[p.Name()]; exists {
-		return errors.New("healthcheck: probe with same name already registered: " + p.Name())
+		return fmt.Errorf("healthcheck -> probe with same name already registered: %s", p.Name())
 	}
 	h.probes[p.Name()] = p
 
 	if _, exists := h.handlers[route]; exists {
-		return errors.New("healthcheck: route already registered: " + route)
+		return fmt.Errorf("healthcheck -> route already registered: %s", route)
 	}
 
 	checker := health.NewChecker(
@@ -71,7 +76,7 @@ func (h *Healthcheck) Register(p *Probe) error {
 				if p.IsEnabled() {
 					return nil
 				}
-				return errors.New("probe disabled")
+				return errors.New("healthcheck -> probe disabled")
 			},
 		}),
 	)
